@@ -21,6 +21,7 @@ def apply(ctx):
     for r in candidates:
         canonical=names[r['scene']]
         groups.setdefault(canonical,[]).append({**r,'canonical':canonical})
+    transits={}
     for key,items in sorted(groups.items()):
         version=max(r['version_n'] for r in items);top=[r for r in items if r['version_n']==version]
         fingerprints={(tuple(r['spans']),tuple(r['cloud']),r['price_n'],r['quality']) for r in top}
@@ -28,10 +29,12 @@ def apply(ctx):
             for r in items:isolate(ctx,r,'CONFLICT','同版本影像元数据冲突')
             continue
         winner=min(top,key=lambda r:r['行号']);valid.append(winner)
+        # 保留同场景全部结构有效过境，供M8多过境融合提案复核；不改变既有采信/隔离裁决
+        transits[key]=sorted(items,key=lambda r:(-r['version_n'],r['行号']))
         for r in items:
             if r is winner:continue
             if r['version_n']==version:duplicates+=1
             else:isolate(ctx,r,'SUPERSEDED','存在更新影像版本')
-    ctx.update(scenes=valid,duplicates=duplicates)
+    ctx.update(scenes=valid,duplicates=duplicates,transits=transits)
     return {'rows':[{k:v for k,v in r.items() if k not in ('spans','cloud')} for r in valid],'metrics':[['有效场景',len(valid),'幅'],['别名',sum(k!=v for k,v in names.items()),'个'],['重复',duplicates,'条']]}
 

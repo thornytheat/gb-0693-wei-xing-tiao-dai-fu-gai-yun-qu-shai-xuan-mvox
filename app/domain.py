@@ -26,6 +26,21 @@ def subtract(intervals,mask):
         result=new
     return result
 def length(intervals): return sum((z-a for a,z in merge(intervals)),Decimal(0))
+def claim_parts(offer):
+    # offer: [(排序键, 区间列表)]；返回[(区间, 来源排序键)]，每段只归属一个来源，同点并列取排序最前者
+    cuts=set()
+    for _,spans in offer:
+        for a,z in spans:cuts.add(a);cuts.add(z)
+    cuts=sorted(cuts);parts=[]
+    for a,z in zip(cuts,cuts[1:]):
+        if z<=a:continue
+        owner=min((key for key,spans in offer if any(c<=a and z<=d and c<d for c,d in spans)),default=None,key=lambda k:(k[0],k[1]))
+        if owner is not None:parts.append(((a,z),owner))
+    merged=[]
+    for part,owner in parts:
+        if merged and merged[-1][1]==owner and merged[-1][0][1]==part[0]:merged[-1]=((merged[-1][0][0],part[1]),owner)
+        else:merged.append((part,owner))
+    return merged
 def aliases(rows):
     parent={}
     def find(x):

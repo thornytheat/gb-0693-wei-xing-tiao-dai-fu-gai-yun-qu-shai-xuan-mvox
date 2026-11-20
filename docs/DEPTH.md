@@ -15,6 +15,7 @@
 | M5 缺口定位 | 运行缺口定位并复核证据 | `POST /api/m5`；`/work/5` | `app/modules/m5_gaps/rules.py` | `tests/test_m5.py` |
 | M6 采购候选 | 运行采购候选并复核证据 | `POST /api/m6`；`/work/6` | `app/modules/m6_purchase/rules.py` | `tests/test_m6.py` |
 | M7 交付核验 | 运行交付核验并复核证据 | `POST /api/m7`；`/work/7` | `app/modules/m7_delivery/rules.py` | `tests/test_m7.py` |
+| M8 融合确认 | 复核多过境融合提案并确认/退回 | `POST /api/m8`、`POST /api/fusion/confirm`；`/work/8` | `app/modules/m8_fusion/rules.py`、`app/modules/m8_fusion/confirm.py`、`app/store.py` | `tests/test_m8.py`、`tests/test_m8_e2e.py` |
 
 ## 陷阱登记
 
@@ -28,6 +29,10 @@
 | TRAP-22 | 别名等价类 | 静默覆盖或误计 | 显式裁决并保留证据 | `app/modules/m2_coordinates/rules.py` | `tests/test_m2.py::test_alias_equivalence` |
 | TRAP-23 | 跨日界线 | 静默覆盖或误计 | 显式裁决并保留证据 | `app/modules/m2_coordinates/rules.py` | `tests/test_m2.py::test_dateline_split` |
 | TRAP-25 | 版本有效性 | 静默覆盖或误计 | 显式裁决并保留证据 | `app/modules/m2_coordinates/rules.py` | `tests/test_m2.py::test_newest_version_rules` |
+| TRAP-26 | 多过境拼接失真 | 把不同日期清晰段直接当作一次观测，验收时点失真 | 融合只产出提案，逐段保留来源观测/版本/采集时间，人工确认后才生效 | `app/modules/m8_fusion/rules.py` | `tests/test_m8.py::test_proposal_segments_trace_to_source_and_time` |
+| TRAP-27 | 确认前污染缺口 | 融合提案自动改写覆盖与缺口 | 提案纯函数不写coverage/gaps，确认事务内才重算confirmed视图 | `app/modules/m8_fusion/rules.py`、`app/store.py` | `tests/test_m8.py::test_proposal_does_not_mutate_baseline_gap_or_purchase` |
+| TRAP-28 | 同场景重复计费 | 多过境融合后按过境多次采购 | 采购台账以(run_id,场景)唯一键约束，同场景只计一次 | `app/store.py` | `tests/test_m8_e2e.py::test_retry_same_batch_adds_no_purchase` |
+| TRAP-29 | 重算中断脏写 | 中断后留下半更新批次 | 单事务+异常回滚，旧版revision/状态/台账完整保留 | `app/store.py` | `tests/test_m8_e2e.py::test_interrupted_recompute_rolls_back_to_old_version` |
 
 ## 对账规则
 

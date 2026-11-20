@@ -1,2 +1,10 @@
 {% extends 'base.html' %}
-{% block stage_visual %}{% for r in current.rows %}<div class="terminal-line"><span>{{r["场景"]}}</span>{{r["新增覆盖_度"]}}°</div>{% endfor %}{% endblock %}
+{% block stage_visual %}
+{% if run.confirmed and run.fusion_status=='已确认' %}
+<div class="terminal-line"><span>口径</span>融合确认后采购 — {{run.confirmed.purchase_scenes}} 幅 / {{run.confirmed.purchase_cost}} CNY / 同场景仅计一次</div>
+{% for r in run.confirmed.purchase_rows %}<div class="terminal-line"><span>{{r['场景']}}</span>{{r['新增覆盖_度']}}° / {{r['价格_CNY']}} CNY（融合口径，溯源见融合确认页）</div>{% endfor %}
+{% else %}
+<div class="terminal-line"><span>口径</span>基线（仅最新过境）— 融合确认前不更新采购</div>
+{% for r in current.rows %}<div class="terminal-line"><span>{{r["场景"]}}</span>{{r["新增覆盖_度"]}}°</div>{% endfor %}
+{% endif %}
+{% endblock %}

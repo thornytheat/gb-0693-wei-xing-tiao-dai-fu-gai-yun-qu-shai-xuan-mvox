@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block stage_visual %}
+<div class="terminal-line"><span>融合状态</span>{{run.fusion_status}}　{% if run.confirmed %}融合覆盖 {{run.confirmed.fused_width}}° / 缺口 {{run.confirmed.gap_width}}° / 采购 {{run.confirmed.purchase_scenes}} 幅 / {{run.confirmed.purchase_cost}} CNY{% else %}确认前缺口与采购仍按基线（最新过境）计算{% endif %}</div>
+{% for seg in current.rows %}
+<div class="terminal-line"><span>{{seg['融合场景']}} › {{seg['来源场景']}} v{{seg['来源版本']}}</span>{{seg['融合起点']}}→{{seg['融合终点']}}（{{seg['段宽度_度']}}°） · {{seg['来源角色']}} · {{seg['采集时间']}} · 行{{seg['来源行号']}}</div>
+{% else %}
+<div class="terminal-line"><span>FUSION</span>无多过境融合候选</div>
+{% endfor %}
+<div class="actions">
+  <button data-fusion="已确认">确认融合并更新缺口/采购</button>
+  <button data-fusion="已退回">退回融合提案</button>
+  <button id="fusion-sample">载入融合样例</button>
+  <a class="btn" href="/api/fusion/ledger?run_id={{run.manifest.run_id}}">采购台账JSON</a>
+</div>
+{% if run.confirmed %}
+<div class="panel__head" style="margin-top:14px"><h2>$ ledger --purchase（同场景仅计一次）</h2><span>{{run.confirmed.ledger|length}} SCENES</span></div>
+<div class="scroll">
+<table><thead><tr><th>采购场景</th><th>价格_CNY</th><th>新增覆盖_度</th><th>来源观测（场景/版本/采集时间/行号/角色）</th></tr></thead>
+<tbody>{% for item in run.confirmed.ledger %}<tr><td>{{item['场景']}}</td><td>{{item['价格_CNY']}}</td><td>{{item['新增覆盖_度']}}</td><td style="text-align:left;white-space:normal">{% for s in item['来源观测'] %}{{s['来源场景']}} v{{s['来源版本']}} · {{s['采集时间']}} · 行{{s['来源行号']}} · {{s['来源角色']}}（{{s['段宽度_度']}}°）<br>{% endfor %}</td></tr>{% endfor %}</tbody></table>
+</div>
+{% endif %}
+{% if current.excluded_rows %}
+<div class="panel__head" style="margin-top:14px"><h2>$ fusion --excluded 未融合原因</h2><span>{{current.excluded_rows|length}} RECORDS</span></div>
+<div class="scroll">
+<table><thead><tr><th>融合场景</th><th>来源场景</th><th>行号</th><th>版本</th><th>采集时间</th><th>原因码</th><th>原因</th></tr></thead>
+<tbody>{% for r in current.excluded_rows %}<tr><td>{{r['融合场景']}}</td><td>{{r['来源场景']}}</td><td>{{r['来源行号']}}</td><td>{{r['来源版本']}}</td><td>{{r['采集时间']}}</td><td class="sev--warn">{{r['原因码']}}</td><td style="text-align:left">{{r['原因']}}</td></tr>{% endfor %}</tbody></table>
+</div>
+{% endif %}
+{% endblock %}
